@@ -15,6 +15,48 @@
       "restrictions": [
         "amendoim e maça"
       ]
+    },
+    {
+      "id": 1791201562523,
+      "name": "eduardo",
+      "enrollment": "674269",
+      "accessCode": "9AD4539502",
+      "className": "2b",
+      "birthDate": "2026-10-05",
+      "gender": "masculino",
+      "guardianName": "nsei",
+      "guardianPhone": "nsei",
+      "address": "nsei",
+      "status": "ativo",
+      "restrictions": []
+    },
+    {
+      "id": 1791201623199,
+      "name": "jab",
+      "enrollment": "098765",
+      "accessCode": "BC2DE58A9F",
+      "className": "6a",
+      "birthDate": "2026-10-05",
+      "gender": "sla",
+      "guardianName": "nseitbm",
+      "guardianPhone": "tbm",
+      "address": "tbm",
+      "status": "ativo",
+      "restrictions": []
+    },
+    {
+      "id": 1791304686929,
+      "name": "sonner regio",
+      "enrollment": "78787778",
+      "accessCode": "4E189F2B10",
+      "className": "2a",
+      "birthDate": "2026-10-06",
+      "gender": "n faz",
+      "guardianName": "pai",
+      "guardianPhone": "nsei",
+      "address": "msm q o meu",
+      "status": "ativo",
+      "restrictions": []
     }
   ],
   "guardians": [],
@@ -54,10 +96,216 @@
         "Glúten"
       ],
       "status": "Rascunho"
+    },
+    {
+      "date": "2026-10-05",
+      "mealType": "cafe-da-manha",
+      "meal": "67",
+      "dessert": "",
+      "allergens": [
+        "kg"
+      ],
+      "status": "Publicado",
+      "id": 1791200814909.6746
+    },
+    {
+      "date": "2026-10-05",
+      "mealType": "almoco",
+      "meal": "ttth",
+      "dessert": "",
+      "allergens": [
+        "mk"
+      ],
+      "status": "Publicado",
+      "id": 1791200814909.2375
+    },
+    {
+      "date": "2026-10-05",
+      "mealType": "jantar",
+      "meal": "42",
+      "dessert": "",
+      "allergens": [
+        "ml"
+      ],
+      "status": "Publicado",
+      "id": 1791200814909.1472
+    },
+    {
+      "date": "2026-10-06",
+      "mealType": "cafe-da-manha",
+      "meal": "bm",
+      "dessert": "",
+      "allergens": [
+        "bv"
+      ],
+      "status": "Publicado",
+      "id": 1791200814909.798
+    },
+    {
+      "date": "2026-10-06",
+      "mealType": "almoco",
+      "meal": "nb",
+      "dessert": "",
+      "allergens": [
+        "nm"
+      ],
+      "status": "Publicado",
+      "id": 1791200814909.573
+    },
+    {
+      "date": "2026-10-06",
+      "mealType": "jantar",
+      "meal": "bv",
+      "dessert": "",
+      "allergens": [
+        "nj"
+      ],
+      "status": "Publicado",
+      "id": 1791200814909.2715
+    },
+    {
+      "date": "2026-10-07",
+      "mealType": "cafe-da-manha",
+      "meal": "vc",
+      "dessert": "",
+      "allergens": [
+        "gv"
+      ],
+      "status": "Publicado",
+      "id": 1791200814909.6953
+    },
+    {
+      "date": "2026-10-07",
+      "mealType": "almoco",
+      "meal": "vx",
+      "dessert": "",
+      "allergens": [
+        "vg"
+      ],
+      "status": "Publicado",
+      "id": 1791200814909.2551
+    },
+    {
+      "date": "2026-10-07",
+      "mealType": "jantar",
+      "meal": "cx",
+      "dessert": "",
+      "allergens": [
+        "vh"
+      ],
+      "status": "Publicado",
+      "id": 1791200814909.9714
+    },
+    {
+      "date": "2026-10-08",
+      "mealType": "cafe-da-manha",
+      "meal": "jk",
+      "dessert": "",
+      "allergens": [
+        "n"
+      ],
+      "status": "Publicado",
+      "id": 1791200814909.2844
+    },
+    {
+      "date": "2026-10-08",
+      "mealType": "almoco",
+      "meal": "kh",
+      "dessert": "",
+      "allergens": [
+        "op"
+      ],
+      "status": "Publicado",
+      "id": 1791200814909.7087
+    },
+    {
+      "date": "2026-10-08",
+      "mealType": "jantar",
+      "meal": "gh",
+      "dessert": "",
+      "allergens": [
+        "mn"
+      ],
+      "status": "Publicado",
+      "id": 1791200814909.0918
+    },
+    {
+      "date": "2026-10-09",
+      "mealType": "cafe-da-manha",
+      "meal": "nb",
+      "dessert": "",
+      "allergens": [],
+      "status": "Publicado",
+      "id": 1791200814909.8208
+    },
+    {
+      "date": "2026-10-09",
+      "mealType": "almoco",
+      "meal": "hg",
+      "dessert": "",
+      "allergens": [],
+      "status": "Publicado",
+      "id": 1791200814909.1836
+    },
+    {
+      "date": "2026-10-09",
+      "mealType": "jantar",
+      "meal": "fd",
+      "dessert": "",
+      "allergens": [],
+      "status": "Publicado",
+      "id": 1791200814909.68
     }
   ],
-  "attendance": [],
+  "attendance": [
+    {
+      "id": 1791201450639,
+      "studentId": 1790607284112,
+      "date": "2026-10-05",
+      "time": "07:57",
+      "method": "Código do aluno",
+      "meals": [
+        "cafe-da-manha",
+        "jantar"
+      ]
+    }
+  ],
   "notifications": [
+    {
+      "id": 1791200814909.2886,
+      "title": "Cardápio alterado",
+      "text": "O cardápio de 2026-10-09 foi atualizado. Confira as refeições e os alérgenos.",
+      "date": "agora",
+      "read": false
+    },
+    {
+      "id": 1791200814909.3293,
+      "title": "Cardápio alterado",
+      "text": "O cardápio de 2026-10-08 foi atualizado. Confira as refeições e os alérgenos.",
+      "date": "agora",
+      "read": false
+    },
+    {
+      "id": 1791200814909.02,
+      "title": "Cardápio alterado",
+      "text": "O cardápio de 2026-10-07 foi atualizado. Confira as refeições e os alérgenos.",
+      "date": "agora",
+      "read": false
+    },
+    {
+      "id": 1791200814909.903,
+      "title": "Cardápio alterado",
+      "text": "O cardápio de 2026-10-06 foi atualizado. Confira as refeições e os alérgenos.",
+      "date": "agora",
+      "read": false
+    },
+    {
+      "id": 1791200814909.8513,
+      "title": "Cardápio alterado",
+      "text": "O cardápio de 2026-10-05 foi atualizado. Confira as refeições e os alérgenos.",
+      "date": "agora",
+      "read": false
+    },
     {
       "id": 1,
       "title": "Cardápio de amanhã publicado",
@@ -74,14 +322,14 @@
     }
   ],
   "meals": {
-    "prepared": 132,
+    "prepared": 168,
     "consumed": 118,
     "options": [
       {
         "id": "cafe-da-manha",
         "label": "Café da manhã",
         "active": true,
-        "prepared": 42,
+        "prepared": 78,
         "consumed": 38
       },
       {
@@ -92,8 +340,8 @@
         "consumed": 47
       },
       {
-        "id": "janta",
-        "label": "Janta",
+        "id": "jantar",
+        "label": "Jantar",
         "active": true,
         "prepared": 38,
         "consumed": 33
@@ -106,6 +354,15 @@
       "studentId": 1,
       "date": "2026-09-25",
       "meals": []
+    },
+    {
+      "id": 1791201450638,
+      "studentId": 1790607284112,
+      "date": "2026-10-05",
+      "meals": [
+        "cafe-da-manha",
+        "jantar"
+      ]
     }
   ]
 }

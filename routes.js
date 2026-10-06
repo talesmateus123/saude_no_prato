@@ -101,8 +101,7 @@ app.post('/login', (req, res) => {
     if (req.auth?.role === 'aluno') return res.redirect('/aluno');
     const configuredPassword = process.env.STAFF_PASSWORD;
     if (!configuredPassword) return res.status(503).render('employee-login', { titulo: 'Acesso da equipe', error: 'O acesso da equipe ainda não foi configurado.' });
-    const validPassword = passwordMatches(req.body.password, configuredPassword);
-    if (!validPassword) return res.status(401).render('employee-login', { titulo: 'Acesso da equipe', error: 'Senha incorreta.' });
+    if (!passwordMatches(req.body.password, configuredPassword)) return res.status(401).render('employee-login', { titulo: 'Acesso da equipe', error: 'Senha incorreta.' });
     setAuthCookie(res, { role: 'funcionario' });
     res.redirect('/');
 });
@@ -175,7 +174,43 @@ app.get('/api/dashboard', (req, res) => {
     const store = readStore();
     const today = new Date().toISOString().slice(0, 10);
     const todayAttendance = store.attendance.filter((item) => item.date === today);
-    res.json({ students: store.students.length, present: todayAttendance.length, prepared: store.meals.prepared, consumed: store.meals.consumed, menu: store.menu.map(normalizeMenuItem), attendance: todayAttendance.map((item) => ({ ...item, student: store.students.find((student) => student.id === item.studentId) })), notifications: store.notifications, studentsList: store.students, guardians: store.guardians });
+    const activeStudents = store.students.filter((student) => !student.status || student.status === 'ativo');
+    const prepared = store.meals.options.reduce((total, option) => total + Number(option.prepared || 0), 0);
+    res.json({ students: activeStudents.length, present: todayAttendance.length, prepared, consumed: store.meals.consumed, mealOptions: store.meals.options, menu: store.menu.map(normalizeMenuItem), attendance: todayAttendance.map((item) => ({ ...item, student: store.students.find((student) => student.id === item.studentId) })), notifications: store.notifications, studentsList: store.students, guardians: store.guardians });
+});
+
+app.patch('/api/meals/prepared', (req, res) => {
+    if (!requireEmployee(req, res)) return;
+    const prepared = req.body?.prepared;
+    if (!prepared || typeof prepared !== 'object' || Array.isArray(prepared) || mealTypes.some((id) => !Number.isSafeInteger(prepared[id]) || prepared[id] < 0)) {
+        return res.status(400).json({ error: 'Informe uma quantidade válida para cada refeição.' });
+    }
+    const store = readStore();
+    const belowServed = store.meals.options.some((option) => mealTypes.includes(option.id) && prepared[option.id] < Number(option.consumed || 0));
+    if (belowServed) return res.status(400).json({ error: 'As porções preparadas não podem ser menores do que as já servidas.' });
+    store.meals.options.forEach((option) => {
+        if (mealTypes.includes(option.id)) option.prepared = prepared[option.id];
+    });
+    store.meals.prepared = store.meals.options.reduce((total, option) => total + Number(option.prepared || 0), 0);
+    writeStore(store);
+    res.json({ prepared: store.meals.prepared, mealOptions: store.meals.options });
+});
+
+app.patch('/api/meals/consumed', (req, res) => {
+    if (!requireEmployee(req, res)) return;
+    const consumed = req.body?.consumed;
+    if (!consumed || typeof consumed !== 'object' || Array.isArray(consumed) || mealTypes.some((id) => !Number.isSafeInteger(consumed[id]) || consumed[id] < 0)) {
+        return res.status(400).json({ error: 'Informe uma quantidade válida para cada refeição.' });
+    }
+    const store = readStore();
+    const exceedsPrepared = store.meals.options.some((option) => mealTypes.includes(option.id) && consumed[option.id] > Number(option.prepared || 0));
+    if (exceedsPrepared) return res.status(400).json({ error: 'As porções servidas não podem superar as porções preparadas.' });
+    store.meals.options.forEach((option) => {
+        if (mealTypes.includes(option.id)) option.consumed = consumed[option.id];
+    });
+    store.meals.consumed = store.meals.options.reduce((total, option) => total + Number(option.consumed || 0), 0);
+    writeStore(store);
+    res.json({ consumed: store.meals.consumed, mealOptions: store.meals.options });
 });
 
 app.post('/api/students', (req, res) => {

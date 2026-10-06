@@ -1,5 +1,7 @@
-.sidebar-bottom .logout-form{margin:0}
-.sidebar-bottom .logout-button{width:100%;display:flex;align-items:center;gap:13px;padding:12px 13px;border:0;border-radius:9px;background:transparent;color:#858983;text-align:left;font:500 13px 'DM Sans',sans-serif;cursor:pointer;transition:background .2s,color .2s}
-.sidebar-bottom .logout-button span{width:18px;text-align:center;font-size:17px}
-.sidebar-bottom .logout-button:hover{background:#fdf0e9;color:#df644f}
-.sidebar-bottom .logout-button:focus-visible{outline:2px solid #df806b;outline-offset:2px}
+.user-menu{position:relative}
+.user-menu-popover{position:absolute;top:calc(100% + 8px);right:0;z-index:30;min-width:220px;padding:5px;border:1px solid #e5e0d7;border-radius:6px;background:#fffdf9;box-shadow:0 8px 24px #293a311c}
+.user-menu-popover[hidden]{display:none}
+.user-menu-popover form{margin:0}
+.user-logout-button{display:flex;align-items:center;gap:10px;width:100%;padding:10px 12px;border:0;border-radius:4px;background:transparent;color:#59635b;text-align:left;font:500 12px 'DM Sans',sans-serif;cursor:pointer}
+.user-logout-button:hover{background:#fdf0e9;color:#df644f}
+.user-logout-button:focus-visible{outline:2px solid #df806b;outline-offset:1px}

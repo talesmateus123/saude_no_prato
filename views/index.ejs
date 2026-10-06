@@ -13,6 +13,7 @@
     <link rel="stylesheet" href="/css/index.css">
     <link rel="stylesheet" href="/css/meals.css">
     <link rel="stylesheet" href="/css/logout.css">
+    <link rel="stylesheet" href="/css/portions.css">
 </head>
 <body>
 <div class="app-shell">
@@ -22,17 +23,23 @@
         <nav class="nav" aria-label="Navegação principal">
             <a class="nav-link active" href="#inicio" data-section="inicio"><span>◈</span> Visão geral</a>
             <a class="nav-link" href="#cardapio" data-section="cardapio"><span>▦</span> Cardápio</a>
+            <a class="nav-link" href="#porcoes" data-section="porcoes"><span>◒</span> Porções</a>
             <a class="nav-link" href="#alunos" data-section="alunos"><span>♧</span> Alunos</a>
             <a class="nav-link" href="#relatorios" data-section="relatorios"><span>▤</span> Relatórios</a>
         </nav>
-        <div class="sidebar-bottom"><form class="logout-form" action="/logout" method="post"><button class="logout-button" type="submit"><span aria-hidden="true">↪</span> Sair da equipe</button></form><p>Prato Vivo <span>v1.0</span></p></div>
+        <div class="sidebar-bottom"><p>Prato Vivo <span>v1.0</span></p></div>
     </aside>
     <main class="main-content">
-        <header class="topbar"><button class="menu-toggle" aria-label="Abrir menu">☰</button><div class="crumb">CARDÁPIO E ALIMENTAÇÃO ESCOLAR</div><div class="top-actions"><button class="icon-button" title="Notificações" id="notification-button">♢<span class="notification-dot"></span></button><button class="user-button"><span class="avatar small">MC</span><span>Marina Costa</span><span>⌄</span></button></div></header>
+        <header class="topbar"><button class="menu-toggle" aria-label="Abrir menu">☰</button><div class="crumb">CARDÁPIO E ALIMENTAÇÃO ESCOLAR</div><div class="top-actions"><button class="icon-button" title="Notificações" id="notification-button">♢<span class="notification-dot"></span></button><div class="user-menu"><button class="user-button" id="user-menu-toggle" type="button" aria-expanded="false" aria-controls="user-menu"><span class="avatar small">MC</span><span>Marina Costa</span><span aria-hidden="true">⌄</span></button><div class="user-menu-popover" id="user-menu" hidden><form action="/logout" method="post"><button class="user-logout-button" type="submit"><span aria-hidden="true">↪</span> Sair</button></form></div></div></div></header>
         <div class="content-wrap">
+            <section id="porcoes" class="page-section">
+                <div class="section-title"><div><p class="eyebrow">CONTROLE DE REFEIÇÕES</p><h1>Porções do dia</h1><p>Registre o que foi preparado e servido em cada refeição.</p></div></div>
+                <form id="prepared-meals-form" class="panel portions-form"><div class="panel-heading"><div><p class="eyebrow">PRODUÇÃO DE HOJE</p><h2>Porções preparadas</h2></div></div><div class="portions-grid"><label>Café da manhã<input name="cafe-da-manha" type="number" min="0" step="1" inputmode="numeric" required></label><label>Almoço<input name="almoco" type="number" min="0" step="1" inputmode="numeric" required></label><label>Jantar<input name="jantar" type="number" min="0" step="1" inputmode="numeric" required></label></div><div class="portions-footer"><p id="prepared-meals-feedback" class="feedback" aria-live="polite"></p><button class="primary-button" type="submit">Salvar porções preparadas</button></div></form>
+                <form id="served-meals-form" class="panel portions-form"><div class="panel-heading"><div><p class="eyebrow">REGISTRO DE HOJE</p><h2>Porções servidas</h2></div></div><div class="portions-grid"><label>Café da manhã<input name="cafe-da-manha" type="number" min="0" step="1" inputmode="numeric" required></label><label>Almoço<input name="almoco" type="number" min="0" step="1" inputmode="numeric" required></label><label>Jantar<input name="jantar" type="number" min="0" step="1" inputmode="numeric" required></label></div><div class="portions-footer"><p id="served-meals-feedback" class="feedback" aria-live="polite"></p><button class="primary-button" type="submit">Salvar porções servidas</button></div></form>
+            </section>
             <section id="inicio" class="page-section active-section">
                 <div class="welcome"><div><p class="eyebrow">BOM DIA, MARINA</p><h1>Alimentar bem é<br><em>cuidar do futuro.</em></h1><p class="subheading">Acompanhe hoje a alimentação da sua escola.</p></div><div class="date-card"><span>HOJE</span><strong>16</strong><small>SET · QUARTA</small></div></div>
-                <div class="metric-grid"><article class="metric-card coral"><span class="metric-icon">♧</span><small>ALUNOS ATIVOS</small><strong id="students-count">--</strong><p>na escola hoje</p></article><article class="metric-card yellow"><span class="metric-icon">✓</span><small>PRESENÇAS HOJE</small><strong id="present-count">--</strong><p><b class="up">↑ 8%</b> vs. ontem</p></article><article class="metric-card mint"><span class="metric-icon">◒</span><small>REFEIÇÕES SERVIDAS</small><strong id="consumed-count">--</strong><p>de <span id="prepared-count">--</span> preparadas</p></article><article class="metric-card blue"><span class="metric-icon">⌁</span><small>COBERTURA ESTIMADA</small><strong id="coverage-count">--%</strong><p>da demanda prevista</p></article></div>
+                <div class="metric-grid"><article class="metric-card coral"><span class="metric-icon">♧</span><small>ALUNOS ATIVOS</small><strong id="students-count">--</strong><p>na escola hoje</p></article><article class="metric-card yellow"><span class="metric-icon">✓</span><small>PRESENÇAS HOJE</small><strong id="present-count">--</strong><p><b class="up">↑ 8%</b> vs. ontem</p></article><article class="metric-card mint"><span class="metric-icon">◒</span><small>REFEIÇÕES SERVIDAS</small><strong id="consumed-count">--</strong><p>de <span id="prepared-count">--</span> preparadas</p></article></div>
                 <section class="panel today-menu"><div class="panel-heading"><div><p class="eyebrow">CARDÁPIO DO DIA</p><h2>As três refeições de hoje</h2></div></div><div id="today-menu-list" class="today-menu-list"></div></section>
                 <div class="dashboard-grid"><section class="panel menu-preview"><div class="panel-heading"><div><p class="eyebrow">PRÓXIMOS DIAS</p><h2>Cardápio da semana</h2></div><a href="#cardapio" class="text-link" data-section="cardapio">Ver completo <span>→</span></a></div><div id="menu-list" class="menu-list"></div></section><section class="panel notifications"><div class="panel-heading"><div><p class="eyebrow">CENTRAL DE AVISOS</p><h2>Notificações</h2></div><span class="count-badge">2 novas</span></div><div id="notification-list" class="notification-list"></div></section></div>
             </section>

@@ -15,7 +15,7 @@ Ajuste `STAFF_PASSWORD` e `JWT_SECRET` no arquivo `.env` usando `.env.example` c
 
 ## Funcionalidades
 
-- Dashboard com alunos ativos, presenças, refeições e cobertura estimada.
+- Dashboard com alunos ativos, presenças e refeições; equipe registra as porções preparadas por refeição.
 - Portais separados: funcionários entram com senha; alunos entram com sua matrícula ou código individual.
 - O aluno consulta cardápio e confirma a própria presença no portal, uma vez por dia, com ou sem cardápio publicado.
 - Três refeições obrigatórias por dia útil: café da manhã, almoço e jantar.

@@ -103,23 +103,29 @@ function setStudentFormOpen(isOpen) {
 
 async function loadDashboard() {
     state.dashboard = await request('/api/dashboard');
-    const { students, present, prepared, consumed, menu, notifications, studentsList } = state.dashboard;
+    const { students, present, prepared, consumed, mealOptions, menu, notifications, studentsList } = state.dashboard;
     $('#students-count').textContent = students;
     $('#present-count').textContent = present;
     $('#prepared-count').textContent = prepared;
     $('#consumed-count').textContent = consumed;
-    $('#coverage-count').textContent = `${Math.round((consumed / prepared) * 100)}%`;
+    mealOptions.forEach((option) => {
+        const input = $(`#prepared-meals-form [name="${option.id}"]`);
+        if (input) input.value = option.prepared || 0;
+        const consumedInput = $(`#served-meals-form [name="${option.id}"]`);
+        if (consumedInput) consumedInput.value = option.consumed || 0;
+    });
     renderMenu(menu); renderNotifications(notifications); renderStudents(studentsList);
 }
 
 async function loadReports() {
     state.report = await request('/api/reports');
     const { meals, countByClass } = state.report;
+    const consumptionRate = meals.prepared ? Math.round(meals.consumed / meals.prepared * 100) : 0;
     $('#report-prepared').textContent = meals.prepared;
     $('#report-consumed').textContent = meals.consumed;
     $('#prepared-progress').style.width = `${Math.min(meals.prepared / 140 * 100, 100)}%`;
-    $('#consumed-progress').style.width = `${Math.min(meals.consumed / meals.prepared * 100, 100)}%`;
-    $('#consumption-rate').textContent = `${Math.round(meals.consumed / meals.prepared * 100)}%`;
+    $('#consumed-progress').style.width = `${Math.min(consumptionRate, 100)}%`;
+    $('#consumption-rate').textContent = `${consumptionRate}%`;
     $('#class-report').innerHTML = Object.entries(countByClass).map(([className, count]) => `<div class="class-bar"><i style="height:${Math.max(25, count * 28)}px"></i>${escapeHtml(className)}<br><b>${count}</b></div>`).join('');
 }
 
@@ -132,6 +138,58 @@ function navigate(section) {
 
 document.querySelectorAll('[data-section]').forEach((link) => link.addEventListener('click', (event) => { event.preventDefault(); navigate(link.dataset.section); history.replaceState(null, '', `#${link.dataset.section}`); }));
 $('.menu-toggle').addEventListener('click', () => $('.sidebar').classList.toggle('open'));
+const userMenuToggle = $('#user-menu-toggle');
+const userMenu = $('#user-menu');
+if (userMenuToggle && userMenu) {
+    const closeUserMenu = () => {
+        userMenu.hidden = true;
+        userMenuToggle.setAttribute('aria-expanded', 'false');
+    };
+    userMenuToggle.addEventListener('click', () => {
+        const isExpanded = userMenuToggle.getAttribute('aria-expanded') === 'true';
+        userMenu.hidden = isExpanded;
+        userMenuToggle.setAttribute('aria-expanded', String(!isExpanded));
+    });
+    document.addEventListener('click', (event) => {
+        if (!event.target.closest('.user-menu')) closeUserMenu();
+    });
+    document.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape' && !userMenu.hidden) {
+            closeUserMenu();
+            userMenuToggle.focus();
+        }
+    });
+}
+$('#served-meals-form').addEventListener('submit', async (event) => {
+    event.preventDefault();
+    const form = event.currentTarget;
+    const consumed = Object.fromEntries(mealTypes.map(({ id }) => [id, Number(form.elements[id].value)]));
+    const feedback = $('#served-meals-feedback');
+    try {
+        await request('/api/meals/consumed', { method: 'PATCH', body: JSON.stringify({ consumed }) });
+        feedback.textContent = 'Porções servidas atualizadas.';
+        feedback.style.color = '#579775';
+        await loadDashboard();
+    } catch (error) {
+        feedback.textContent = error.message;
+        feedback.style.color = '#d56d5a';
+    }
+});
+$('#prepared-meals-form').addEventListener('submit', async (event) => {
+    event.preventDefault();
+    const form = event.currentTarget;
+    const prepared = Object.fromEntries(mealTypes.map(({ id }) => [id, Number(form.elements[id].value)]));
+    const feedback = $('#prepared-meals-feedback');
+    try {
+        await request('/api/meals/prepared', { method: 'PATCH', body: JSON.stringify({ prepared }) });
+        feedback.textContent = 'Porções preparadas atualizadas.';
+        feedback.style.color = '#579775';
+        await loadDashboard();
+    } catch (error) {
+        feedback.textContent = error.message;
+        feedback.style.color = '#d56d5a';
+    }
+});
 $('#week-start').value = getWeekStart();
 $('#week-start').addEventListener('change', () => {
     if (!$('#week-start').value) return;

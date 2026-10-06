@@ -26,7 +26,7 @@ const initialData = {
         options: [
             { id: 'cafe-da-manha', label: 'Café da manhã', active: true, prepared: 42, consumed: 38 },
             { id: 'almoco', label: 'Almoço', active: true, prepared: 52, consumed: 47 },
-            { id: 'janta', label: 'Janta', active: true, prepared: 38, consumed: 33 }
+            { id: 'jantar', label: 'Jantar', active: true, prepared: 38, consumed: 33 }
         ]
     },
     mealSelections: []
@@ -48,7 +48,18 @@ export function generateStudentAccessCode(students) {
 export function readStore() {
     ensureStore();
     const data = JSON.parse(fs.readFileSync(dataFile, 'utf8'));
-    if (!data.meals.options) data.meals.options = initialData.meals.options;
+    let mealsChanged = false;
+    if (!data.meals.options) {
+        data.meals.options = initialData.meals.options;
+        mealsChanged = true;
+    }
+    data.meals.options.forEach((option) => {
+        if (option.id === 'janta') {
+            option.id = 'jantar';
+            option.label = 'Jantar';
+            mealsChanged = true;
+        }
+    });
     if (!data.mealSelections) data.mealSelections = [];
     const accessCodes = new Set();
     let codesChanged = false;
@@ -62,7 +73,7 @@ export function readStore() {
         }
         accessCodes.add(student.accessCode);
     });
-    if (codesChanged) fs.writeFileSync(dataFile, JSON.stringify(data, null, 2));
+    if (codesChanged || mealsChanged) fs.writeFileSync(dataFile, JSON.stringify(data, null, 2));
     return data;
 }
 
