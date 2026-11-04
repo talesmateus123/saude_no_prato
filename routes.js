@@ -1,10 +1,11 @@
 import express from "express";
 import { createHmac, randomBytes, timingSafeEqual } from 'node:crypto';
-import { generateStudentAccessCode, readStore, writeStore } from "./database.js";
+import { createStudent, deleteStudents, generateStudentAccessCode, getCurrentDate, readStore, recordStudentAttendance, replaceMenuWeek, saveMenuItem, saveNotification, updateMealOptions, updateStudentRestrictions, updateStudentStatus } from "./database.js";
 
 const app = express();
 const mealTypes = ['cafe-da-manha', 'almoco', 'jantar'];
-const authCookieName = 'prato_vivo_auth';
+const staffAuthCookieName = 'prato_vivo_auth';
+const studentAuthCookieName = 'prato_vivo_student_auth';
 const fallbackAuthSecret = randomBytes(32).toString('hex');
 
 function normalizeMenuItem(item) {
@@ -56,12 +57,14 @@ function readAuthToken(token) {
 
 function setAuthCookie(res, payload) {
     const secure = process.env.NODE_ENV === 'production' ? '; Secure' : '';
-    res.set('Set-Cookie', `${authCookieName}=${createAuthToken(payload)}; HttpOnly; SameSite=Strict; Path=/; Max-Age=28800${secure}`);
+    const cookieName = payload.role === 'aluno' ? studentAuthCookieName : staffAuthCookieName;
+    res.set('Set-Cookie', `${cookieName}=${createAuthToken(payload)}; HttpOnly; SameSite=Strict; Path=/; Max-Age=28800${secure}`);
 }
 
-function clearAuthCookie(res) {
+function clearAuthCookie(res, role) {
     const secure = process.env.NODE_ENV === 'production' ? '; Secure' : '';
-    res.set('Set-Cookie', `${authCookieName}=; HttpOnly; SameSite=Strict; Path=/; Max-Age=0${secure}`);
+    const cookieName = role === 'aluno' ? studentAuthCookieName : staffAuthCookieName;
+    res.set('Set-Cookie', `${cookieName}=; HttpOnly; SameSite=Strict; Path=/; Max-Age=0${secure}`);
 }
 
 function passwordMatches(password, configuredPassword = process.env.STAFF_PASSWORD) {
@@ -87,14 +90,16 @@ app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 app.use((req, res, next) => {
     const cookies = Object.fromEntries(String(req.headers.cookie || '').split(';').map((part) => part.trim().split(/=(.*)/s).slice(0, 2)).filter(([name, value]) => name && value));
-    req.auth = readAuthToken(cookies[authCookieName]);
+    const isStudentPath = req.path === '/aluno' || req.path.startsWith('/api/student/');
+    const cookieName = isStudentPath ? studentAuthCookieName : staffAuthCookieName;
+    req.auth = readAuthToken(cookies[cookieName]);
     next();
 });
 
 app.get('/', async (req, res) => {
     if (req.auth?.role === 'aluno') return res.redirect('/aluno');
     if (req.auth?.role !== 'funcionario') return res.status(401).render('employee-login', { titulo: 'Acesso da equipe', error: '' });
-    res.render('index', { titulo: 'Prato Vivo' });
+    res.render('index', { titulo: 'Saúde no Prato' });
 });
 
 app.post('/login', (req, res) => {
@@ -107,19 +112,17 @@ app.post('/login', (req, res) => {
 });
 
 app.post('/logout', (req, res) => {
-    clearAuthCookie(res);
+    clearAuthCookie(res, 'funcionario');
     res.redirect('/');
 });
 
 app.get('/aluno', (req, res) => {
-    if (req.auth?.role === 'funcionario') return res.redirect('/');
     res.render('student', { titulo: 'Área do aluno' });
 });
 
-app.post('/api/student/login', (req, res) => {
-    if (req.auth?.role === 'funcionario') return res.status(403).json({ error: 'Funcionários devem acessar a área da equipe.' });
+app.post('/api/student/login', async (req, res) => {
     if (req.auth?.role === 'aluno') return res.status(403).json({ error: 'Saia do portal antes de entrar com outro aluno.' });
-    const store = readStore();
+    const store = await readStore();
     const student = studentFromIdentifier(store, req.body.identifier);
     if (!student) return res.status(401).json({ error: 'Matrícula ou código do aluno inválido.' });
     setAuthCookie(res, { role: 'aluno', studentId: student.id });
@@ -128,16 +131,16 @@ app.post('/api/student/login', (req, res) => {
 
 app.post('/api/student/logout', (req, res) => {
     if (!requireStudent(req, res)) return;
-    clearAuthCookie(res);
+    clearAuthCookie(res, 'aluno');
     res.json({ ok: true });
 });
 
-app.get('/api/student/portal', (req, res) => {
+app.get('/api/student/portal', async (req, res) => {
     if (!requireStudent(req, res)) return;
-    const store = readStore();
+    const today = getCurrentDate();
+    const store = await readStore(today);
     const student = store.students.find((item) => item.id === req.auth.studentId);
     if (!student) return res.status(401).json({ error: 'Acesso do aluno expirado. Entre novamente.' });
-    const today = new Date().toISOString().slice(0, 10);
     const todayDate = new Date(`${today}T00:00:00Z`);
     const dayOfWeek = todayDate.getUTCDay();
     todayDate.setUTCDate(todayDate.getUTCDate() + (dayOfWeek >= 6 ? 8 - dayOfWeek : 1 - dayOfWeek));
@@ -148,125 +151,109 @@ app.get('/api/student/portal', (req, res) => {
     const publishedMenu = store.menu.filter((item) => item.status === 'Publicado' && item.date >= weekStart && item.date <= weekEnd).map(normalizeMenuItem).sort((a, b) => a.date.localeCompare(b.date));
     const attendance = store.attendance.find((item) => item.studentId === student.id && item.date === today);
     const selection = store.mealSelections.find((item) => item.studentId === student.id && item.date === today);
+    const notifications = store.notifications
+        .filter((item) => /card[aá]pio|al[eé]rgen/i.test(`${item.title} ${item.text}`))
+        .slice(0, 5)
+        .map(({ id, title, text, date }) => ({ id, title, text, date }));
     res.set('Cache-Control', 'no-store');
-    res.json({ student: { name: student.name, className: student.className }, today, menu: publishedMenu, confirmed: Boolean(attendance), selectedMeals: selection?.meals || attendance?.meals || [] });
+    res.json({ student: { name: student.name, className: student.className }, today, menu: publishedMenu, notifications, confirmed: Boolean(attendance), selectedMeals: selection?.meals || attendance?.meals || [] });
 });
 
-app.post('/api/student/attendance', (req, res) => {
+app.post('/api/student/attendance', async (req, res) => {
     if (!requireStudent(req, res)) return;
-    const store = readStore();
+    const date = getCurrentDate();
+    const store = await readStore(date);
     const student = store.students.find((item) => item.id === req.auth.studentId);
     if (!student) return res.status(401).json({ error: 'Acesso do aluno expirado. Entre novamente.' });
-    const date = new Date().toISOString().slice(0, 10);
     const selectedMeals = Array.isArray(req.body.meals) ? [...new Set(req.body.meals)] : [];
     const availableMeals = store.menu.filter((item) => item.date === date && item.status === 'Publicado').map(normalizeMenuItem).map((item) => item.mealType);
     if (selectedMeals.some((mealType) => !mealTypes.includes(mealType) || !availableMeals.includes(mealType))) return res.status(400).json({ error: 'Escolha somente refeições publicadas para hoje.' });
     if (store.attendance.some((item) => item.studentId === student.id && item.date === date)) return res.status(409).json({ error: 'Sua presença já foi confirmada hoje.' });
     const time = new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
-    store.mealSelections.push({ id: Date.now(), studentId: student.id, date, meals: selectedMeals });
-    store.attendance.unshift({ id: Date.now() + 1, studentId: student.id, date, time, method: 'Código do aluno', meals: selectedMeals });
-    writeStore(store);
+    try {
+        await recordStudentAttendance(
+            { id: Date.now(), studentId: student.id, date, meals: selectedMeals },
+            { id: Date.now() + 1, studentId: student.id, date, time, method: 'Código do aluno', meals: selectedMeals }
+        );
+    } catch (error) {
+        if (error.code === 'ER_DUP_ENTRY') return res.status(409).json({ error: 'Sua presença já foi confirmada hoje.' });
+        throw error;
+    }
     res.status(201).json({ name: student.name, date, time, meals: selectedMeals });
 });
 
-app.get('/api/dashboard', (req, res) => {
+app.get('/api/dashboard', async (req, res) => {
     if (!requireEmployee(req, res)) return;
-    const store = readStore();
-    const today = new Date().toISOString().slice(0, 10);
+    const today = getCurrentDate();
+    const store = await readStore(today);
     const todayAttendance = store.attendance.filter((item) => item.date === today);
     const activeStudents = store.students.filter((student) => !student.status || student.status === 'ativo');
     const prepared = store.meals.options.reduce((total, option) => total + Number(option.prepared || 0), 0);
-    res.json({ students: activeStudents.length, present: todayAttendance.length, prepared, consumed: store.meals.consumed, mealOptions: store.meals.options, menu: store.menu.map(normalizeMenuItem), attendance: todayAttendance.map((item) => ({ ...item, student: store.students.find((student) => student.id === item.studentId) })), notifications: store.notifications, studentsList: store.students, guardians: store.guardians });
+    res.json({ date: today, students: activeStudents.length, present: todayAttendance.length, prepared, consumed: store.meals.consumed, mealOptions: store.meals.options, menu: store.menu.map(normalizeMenuItem), attendance: todayAttendance.map((item) => ({ ...item, student: store.students.find((student) => student.id === item.studentId) })), notifications: store.notifications, studentsList: store.students, guardians: store.guardians });
 });
 
-app.patch('/api/meals/prepared', (req, res) => {
+app.patch('/api/meals/prepared', async (req, res) => {
     if (!requireEmployee(req, res)) return;
     const prepared = req.body?.prepared;
     if (!prepared || typeof prepared !== 'object' || Array.isArray(prepared) || mealTypes.some((id) => !Number.isSafeInteger(prepared[id]) || prepared[id] < 0)) {
         return res.status(400).json({ error: 'Informe uma quantidade válida para cada refeição.' });
     }
-    const store = readStore();
-    const belowServed = store.meals.options.some((option) => mealTypes.includes(option.id) && prepared[option.id] < Number(option.consumed || 0));
-    if (belowServed) return res.status(400).json({ error: 'As porções preparadas não podem ser menores do que as já servidas.' });
-    store.meals.options.forEach((option) => {
-        if (mealTypes.includes(option.id)) option.prepared = prepared[option.id];
-    });
-    store.meals.prepared = store.meals.options.reduce((total, option) => total + Number(option.prepared || 0), 0);
-    writeStore(store);
-    res.json({ prepared: store.meals.prepared, mealOptions: store.meals.options });
+    const result = await updateMealOptions('prepared', prepared, getCurrentDate());
+    if (result.error) return res.status(400).json({ error: result.error });
+    res.json({ prepared: result.total, mealOptions: result.options });
 });
 
-app.patch('/api/meals/consumed', (req, res) => {
+app.patch('/api/meals/consumed', async (req, res) => {
     if (!requireEmployee(req, res)) return;
     const consumed = req.body?.consumed;
     if (!consumed || typeof consumed !== 'object' || Array.isArray(consumed) || mealTypes.some((id) => !Number.isSafeInteger(consumed[id]) || consumed[id] < 0)) {
         return res.status(400).json({ error: 'Informe uma quantidade válida para cada refeição.' });
     }
-    const store = readStore();
-    const exceedsPrepared = store.meals.options.some((option) => mealTypes.includes(option.id) && consumed[option.id] > Number(option.prepared || 0));
-    if (exceedsPrepared) return res.status(400).json({ error: 'As porções servidas não podem superar as porções preparadas.' });
-    store.meals.options.forEach((option) => {
-        if (mealTypes.includes(option.id)) option.consumed = consumed[option.id];
-    });
-    store.meals.consumed = store.meals.options.reduce((total, option) => total + Number(option.consumed || 0), 0);
-    writeStore(store);
-    res.json({ consumed: store.meals.consumed, mealOptions: store.meals.options });
+    const result = await updateMealOptions('consumed', consumed, getCurrentDate());
+    if (result.error) return res.status(400).json({ error: result.error });
+    res.json({ consumed: result.total, mealOptions: result.options });
 });
 
-app.post('/api/students', (req, res) => {
+app.post('/api/students', async (req, res) => {
     if (!requireEmployee(req, res)) return;
-    const store = readStore();
+    const store = await readStore();
     const { name, enrollment, className, birthDate = '', gender = '', guardianName = '', guardianPhone = '', address = '', status = 'ativo', restrictions = [] } = req.body;
     if (!name || !enrollment || !className) return res.status(400).json({ error: 'Preencha nome, matrícula e turma.' });
     if (!['ativo', 'inativo', 'transferido'].includes(status)) return res.status(400).json({ error: 'Status de aluno inválido.' });
     if (store.students.some((student) => student.enrollment === enrollment)) return res.status(409).json({ error: 'Esta matrícula já está cadastrada.' });
-    const student = { id: Date.now(), name: String(name).trim(), enrollment: String(enrollment).trim(), accessCode: generateStudentAccessCode(store.students), className: String(className).trim(), birthDate, gender: String(gender).trim(), guardianName: String(guardianName).trim(), guardianPhone: String(guardianPhone).trim(), address: String(address).trim(), status, restrictions: Array.isArray(restrictions) ? restrictions.map(String).map((item) => item.trim()).filter(Boolean) : [] };
-    store.students.push(student);
-    writeStore(store);
+    const student = await createStudent({ name: String(name).trim(), enrollment: String(enrollment).trim(), accessCode: generateStudentAccessCode(store.students), className: String(className).trim(), birthDate, gender: String(gender).trim(), guardianName: String(guardianName).trim(), guardianPhone: String(guardianPhone).trim(), address: String(address).trim(), status, restrictions: Array.isArray(restrictions) ? restrictions.map(String).map((item) => item.trim()).filter(Boolean) : [] });
     res.status(201).json(student);
 });
 
-app.patch('/api/students/:id/status', (req, res) => {
+app.patch('/api/students/:id/status', async (req, res) => {
     if (!requireEmployee(req, res)) return;
-    const store = readStore();
-    const student = store.students.find((item) => item.id === Number(req.params.id));
-    if (!student) return res.status(404).json({ error: 'Aluno não encontrado.' });
     if (!['ativo', 'inativo', 'transferido'].includes(req.body.status)) return res.status(400).json({ error: 'Status de aluno inválido.' });
-    student.status = req.body.status;
-    writeStore(store);
-    res.json(student);
+    const updated = await updateStudentStatus(req.params.id, req.body.status);
+    if (!updated) return res.status(404).json({ error: 'Aluno não encontrado.' });
+    res.json({ id: Number(req.params.id), status: req.body.status });
 });
 
-app.delete('/api/students', (req, res) => {
+app.delete('/api/students', async (req, res) => {
     if (!requireEmployee(req, res)) return;
     if (!passwordMatches(req.body.password)) return res.status(401).json({ error: 'Senha administrativa incorreta.' });
     const ids = Array.isArray(req.body.ids) ? req.body.ids.map(Number).filter(Number.isInteger) : [];
     if (!ids.length) return res.status(400).json({ error: 'Selecione pelo menos uma matrícula.' });
-    const store = readStore();
-    const removedIds = new Set(ids);
-    const removedCount = store.students.filter((student) => removedIds.has(student.id)).length;
+    const removedCount = await deleteStudents(ids);
     if (!removedCount) return res.status(404).json({ error: 'Nenhuma matrícula selecionada foi encontrada.' });
-    store.students = store.students.filter((student) => !removedIds.has(student.id));
-    store.attendance = store.attendance.filter((item) => !removedIds.has(item.studentId));
-    store.mealSelections = store.mealSelections.filter((item) => !removedIds.has(item.studentId));
-    store.guardians = store.guardians.map((guardian) => ({ ...guardian, studentIds: (guardian.studentIds || []).filter((studentId) => !removedIds.has(studentId)) })).filter((guardian) => guardian.studentIds.length);
-    writeStore(store);
     res.json({ removedCount });
 });
 
-app.patch('/api/students/:id/restrictions', (req, res) => {
+app.patch('/api/students/:id/restrictions', async (req, res) => {
     if (!requireEmployee(req, res)) return;
-    const store = readStore();
-    const student = store.students.find((item) => item.id === Number(req.params.id));
-    if (!student) return res.status(404).json({ error: 'Aluno não encontrado.' });
-    student.restrictions = Array.isArray(req.body.restrictions) ? req.body.restrictions : [];
-    writeStore(store);
-    res.json(student);
+    const restrictions = Array.isArray(req.body.restrictions) ? req.body.restrictions : [];
+    const updated = await updateStudentRestrictions(req.params.id, restrictions);
+    if (!updated) return res.status(404).json({ error: 'Aluno não encontrado.' });
+    res.json({ id: Number(req.params.id), restrictions });
 });
 
-app.post('/api/menu', (req, res) => {
+app.post('/api/menu', async (req, res) => {
     if (!requireEmployee(req, res)) return;
-    const store = readStore();
+    const store = await readStore();
     const { date, meal, dessert, allergens = [], status = 'Publicado', mealType = 'almoco' } = req.body;
     if (!date || !meal) return res.status(400).json({ error: 'Informe data e prato principal.' });
     if (!mealTypes.includes(mealType)) return res.status(400).json({ error: 'Tipo de refeição inválido.' });
@@ -274,16 +261,15 @@ app.post('/api/menu', (req, res) => {
     const previous = store.menu.find((item) => item.date === date && normalizeMenuItem(item).mealType === mealType);
     const previousSnapshot = previous && JSON.stringify({ meal: previous.meal, dessert: previous.dessert || '', allergens: previous.allergens || [], status: previous.status });
     const nextSnapshot = JSON.stringify({ meal: menuItem.meal, dessert: menuItem.dessert, allergens: menuItem.allergens, status: menuItem.status });
-    if (previous) Object.assign(previous, menuItem, { id: previous.id });
-    else store.menu.push(menuItem);
+    if (previous) menuItem.id = previous.id;
+    await saveMenuItem(menuItem);
     if (status === 'Publicado' && (!previous || previousSnapshot !== nextSnapshot)) {
-        addMenuNotification(store, previous ? 'Cardápio alterado' : 'Novo cardápio publicado', `Confira a refeição de ${date}.`);
+        await saveNotification({ id: Date.now() + Math.random(), title: previous ? 'Cardápio alterado' : 'Novo cardápio publicado', text: `Confira a refeição de ${date}.`, date: 'agora', read: false });
     }
-    writeStore(store);
     res.status(201).json(menuItem);
 });
 
-app.put('/api/menu/week', (req, res) => {
+app.put('/api/menu/week', async (req, res) => {
     if (!requireEmployee(req, res)) return;
     const days = Array.isArray(req.body.days) ? req.body.days : [];
     const invalidWeek = days.length !== 5 || days.some((day, index) => {
@@ -295,9 +281,10 @@ app.put('/api/menu/week', (req, res) => {
         return res.status(400).json({ error: 'Informe uma semana de segunda a sexta com as três refeições de cada dia.' });
     }
 
-    const store = readStore();
+    const store = await readStore();
     const updatedMenu = [];
     const changedDates = [];
+    const daysToSave = [];
     days.forEach((day) => {
         const oldItems = menuForDate(store.menu, day.date).filter((item) => mealTypes.includes(item.mealType));
         const newItems = mealTypes.map((mealType) => {
@@ -312,17 +299,16 @@ app.put('/api/menu/week', (req, res) => {
             item.id = oldItem ? oldItem.id : Date.now() + Math.random();
             updatedMenu.push(item);
         });
-        store.menu = store.menu.filter((item) => item.date !== day.date);
+        daysToSave.push({ date: day.date, meals: newItems });
     });
-    store.menu.push(...updatedMenu);
-    changedDates.forEach((date) => addMenuNotification(store, 'Cardápio alterado', `O cardápio de ${date} foi atualizado. Confira as refeições e os alérgenos.`));
-    writeStore(store);
+    const notifications = changedDates.map((date) => ({ id: Date.now() + Math.random(), title: 'Cardápio alterado', text: `O cardápio de ${date} foi atualizado. Confira as refeições e os alérgenos.`, date: 'agora', read: false }));
+    await replaceMenuWeek(daysToSave, notifications);
     res.json({ days: updatedMenu, changedDates });
 });
 
-app.get('/api/reports', (req, res) => {
+app.get('/api/reports', async (req, res) => {
     if (!requireEmployee(req, res)) return;
-    const store = readStore();
+    const store = await readStore(getCurrentDate());
     const countByClass = store.students.reduce((result, student) => { result[student.className] = (result[student.className] || 0) + store.attendance.filter((item) => item.studentId === student.id).length; return result; }, {});
     res.json({ meals: store.meals, attendanceTotal: store.attendance.length, countByClass });
 });

@@ -1,4 +1,4 @@
-# Prato Vivo
+# Saúde no Prato
 
 Painel de alimentação escolar para acompanhar presença, cardápio, restrições alimentares, consumo e relatórios.
 

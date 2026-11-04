@@ -1,0 +1,14 @@
+.overview-feature-grid .today-menu-list{align-items:stretch;gap:12px}
+.overview-feature-grid .today-meal{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:0;padding:12px;text-align:center;border:1px solid #eee6db;border-top:3px solid #21a9b5;border-radius:6px;background:#fffaf5}
+.overview-feature-grid .today-meal>strong{font-size:11px;line-height:1.4;color:#7c6254;text-transform:uppercase}
+.overview-feature-grid .today-meal p{max-width:28ch;margin:10px auto;color:#39433d;font-size:13px;line-height:1.55}
+.overview-feature-grid .today-meal small{max-width:30ch;color:#81867e;font-size:10px;line-height:1.5}
+@media(max-width:760px){.overview-feature-grid .today-menu-list{gap:10px}.overview-feature-grid .today-meal{min-height:0;padding:14px 12px}}
+.overview-feature-grid{grid-template-columns:minmax(0,1fr)}
+.overview-feature-grid .metric-grid{grid-template-columns:repeat(3,minmax(0,1fr));align-content:stretch;order:-1;gap:13px}
+.overview-feature-grid .metric-card{display:block;min-height:145px;padding:20px 20px 17px}
+.overview-feature-grid .metric-card strong{margin:24px 0 0;font-size:37px}
+.overview-feature-grid .metric-card p{margin:6px 0 0}
+.overview-feature-grid .today-menu{margin:25px 0 0}
+@media(max-width:900px){.overview-feature-grid .metric-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:520px){.overview-feature-grid .metric-grid{grid-template-columns:1fr}}

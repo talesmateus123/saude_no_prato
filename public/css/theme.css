@@ -1,0 +1,44 @@
+:root{color-scheme:light;--theme-page:#f7f4ee;--theme-surface:#fffdf9;--theme-surface-raised:#fffaf5;--theme-text:#24302c;--theme-muted:#858b84;--theme-border:#e9e4db;--theme-input:#fffdf9;--theme-input-text:#29352e;--theme-control:#273b35;--theme-control-text:#fff;--theme-label-bg:#fffdf9;--theme-label-text:#58645c;--theme-focus:#21a9b5;--theme-accent-text:#164e8b;transition:background-color .45s ease,color .35s ease}
+:root[data-theme="dark"]{color-scheme:dark;--theme-page:#171c1b;--theme-surface:#222927;--theme-surface-raised:#29312e;--theme-text:#e8e9e2;--theme-muted:#a9b0a8;--theme-border:#3b4540;--theme-input:#1c2321;--theme-input-text:#e8e9e2;--theme-control:#ffe08a;--theme-control-text:#29302b;--theme-label-bg:#29312e;--theme-label-text:#d9ddd5;--theme-focus:#a5e9ed;--theme-accent-text:#a5e9ed}
+:root[data-theme="dark"] body{background:var(--theme-page);color:var(--theme-text)}
+:root[data-theme="dark"] .sidebar,:root[data-theme="dark"] .topbar,:root[data-theme="dark"] .panel,:root[data-theme="dark"] .student-header,:root[data-theme="dark"] .student-section,:root[data-theme="dark"] .student-login{background:var(--theme-surface);border-color:var(--theme-border);color:var(--theme-text)}
+:root[data-theme="dark"] .student-page{background:var(--theme-page)}
+:root[data-theme="dark"] .brand,:root[data-theme="dark"] .student-header .brand{color:#f0eee5}
+:root[data-theme="dark"] .student-login>p:not(.eyebrow),:root[data-theme="dark"] .student-welcome>div>p:not(.eyebrow){color:#c0c7bf}
+:root[data-theme="dark"] .nav-link{color:#a9b0a8}
+:root[data-theme="dark"] .nav-link:hover,:root[data-theme="dark"] .nav-link.active{background:#153f44;color:#a5e9ed}
+:root[data-theme="dark"] .profile,:root[data-theme="dark"] .menu-row,:root[data-theme="dark"] .notification-item,:root[data-theme="dark"] .student-row,:root[data-theme="dark"] .full-menu-day,:root[data-theme="dark"] .attendance-row,:root[data-theme="dark"] .recent-heading{border-color:var(--theme-border)}
+:root[data-theme="dark"] .panel h2,:root[data-theme="dark"] .student-section h2,:root[data-theme="dark"] .student-login h1,:root[data-theme="dark"] .student-welcome h1,:root[data-theme="dark"] .section-title h1,:root[data-theme="dark"] .student-meal h3,:root[data-theme="dark"] .student-week-day h3{color:var(--theme-text)}
+:root[data-theme="dark"] .crumb,:root[data-theme="dark"] .profile small,:root[data-theme="dark"] .subheading,:root[data-theme="dark"] .section-title>div>p:last-child,:root[data-theme="dark"] .today-meal small,:root[data-theme="dark"] .empty-meal,:root[data-theme="dark"] .student-header-label,:root[data-theme="dark"] .student-section-heading time,:root[data-theme="dark"] .student-meal small,:root[data-theme="dark"] .student-week-meal small{color:var(--theme-muted)}
+:root[data-theme="dark"] .user-button,:root[data-theme="dark"] .menu-toggle,:root[data-theme="dark"] .student-meal p,:root[data-theme="dark"] .student-week-meal span,:root[data-theme="dark"] .today-meal p,:root[data-theme="dark"] .week-meal-line>span{color:var(--theme-text)}
+:root[data-theme="dark"] .metric-card.coral{background:#153f44}:root[data-theme="dark"] .metric-card.yellow{background:#453d27}:root[data-theme="dark"] .metric-card.mint{background:#293d35}
+:root[data-theme="dark"] .metric-card small,:root[data-theme="dark"] .metric-card p,:root[data-theme="dark"] .metric-card strong{color:#f0eee5}
+:root[data-theme="dark"] .today-meal,:root[data-theme="dark"] .overview-feature-grid .today-meal{background:var(--theme-surface-raised);border-color:var(--theme-border);border-top-color:#21a9b5}
+:root[data-theme="dark"] .overview-feature-grid .today-meal>strong{color:#bceff1}
+:root[data-theme="dark"] .notification-item p,:root[data-theme="dark"] .notification-item small,:root[data-theme="dark"] .attendance-row small,:root[data-theme="dark"] .attendance-row time,:root[data-theme="dark"] .attendance-row>span,:root[data-theme="dark"] .attendance-empty,:root[data-theme="dark"] .menu-day,:root[data-theme="dark"] .menu-copy small,:root[data-theme="dark"] .week-meal-line strong,:root[data-theme="dark"] .week-meal-line small,:root[data-theme="dark"] .full-menu-day-heading small,:root[data-theme="dark"] .students-empty{color:var(--theme-muted)}
+:root[data-theme="dark"] .menu-day strong,:root[data-theme="dark"] .menu-copy strong,:root[data-theme="dark"] .attendance-row strong,:root[data-theme="dark"] .student-name strong,:root[data-theme="dark"] .week-meal-line strong{color:var(--theme-text)}
+:root[data-theme="dark"] input,:root[data-theme="dark"] select,:root[data-theme="dark"] textarea{background:var(--theme-input);border-color:var(--theme-border);color:var(--theme-input-text);color-scheme:dark}
+:root[data-theme="dark"] .student-form-grid label,:root[data-theme="dark"] .portions-grid label,:root[data-theme="dark"] .weekly-meal-editor label,:root[data-theme="dark"] .week-form-heading>label,:root[data-theme="dark"] .student-login label,:root[data-theme="dark"] .student-attendance-form legend,:root[data-theme="dark"] .student-meal-choice{color:#d7dbd4}
+:root[data-theme="dark"] .weekly-day,:root[data-theme="dark"] .student-meal,:root[data-theme="dark"] .student-week-day,:root[data-theme="dark"] .student-meal-choice,:root[data-theme="dark"] .student-confirmed{background:var(--theme-surface-raised);border-color:var(--theme-border);color:var(--theme-text)}
+:root[data-theme="dark"] .user-menu-popover{background:var(--theme-surface);border-color:var(--theme-border)}
+:root[data-theme="dark"] .secondary-button{background:var(--theme-surface-raised);border-color:var(--theme-border);color:var(--theme-text)}
+:root[data-theme="dark"] .date-card,:root[data-theme="dark"] .scanner-visual{background:#293d35}
+:root[data-theme="dark"] .report-card small,:root[data-theme="dark"] .report-card p,:root[data-theme="dark"] .class-bar{color:var(--theme-muted)}
+:root[data-theme="dark"] .progress{background:#3b4540}
+:root[data-theme="dark"] .search-row input,:root[data-theme="dark"] .input-action input,:root[data-theme="dark"] .student-code-entry input{background:var(--theme-input);color:var(--theme-input-text);border-color:var(--theme-border)}
+:root[data-theme="dark"] .theme-pixel-transition{display:grid;position:fixed;z-index:10000;inset:0;grid-template-columns:repeat(var(--pixel-columns),1fr);grid-template-rows:repeat(var(--pixel-rows),1fr);pointer-events:none;overflow:hidden}
+.theme-control{display:inline-flex;align-items:center;gap:8px;flex:none}
+.theme-toggle{display:grid;place-items:center;width:38px;height:38px;flex:0 0 38px;padding:0;border:1px solid color-mix(in srgb,var(--theme-text) 14%,transparent);border-radius:50%;background:var(--theme-control);color:var(--theme-control-text);transition:transform .2s ease,background-color .35s ease,color .35s ease,border-color .35s ease}
+.theme-toggle:hover{transform:rotate(-10deg) scale(1.06)}
+.theme-toggle:focus-visible{outline:2px solid var(--theme-focus);outline-offset:3px}
+.theme-icon{font-size:19px;line-height:1}
+.theme-label{padding:6px 8px;border:1px solid var(--theme-border);border-radius:4px;background:var(--theme-label-bg);color:var(--theme-label-text);font-size:10px;white-space:nowrap;transition:background-color .35s ease,color .35s ease,border-color .35s ease}
+.theme-pixel-transition{display:grid;position:fixed;z-index:10000;inset:0;grid-template-columns:repeat(var(--pixel-columns),var(--pixel-size));grid-auto-rows:var(--pixel-size);gap:0;align-content:start;justify-content:start;pointer-events:none;overflow:hidden}
+.theme-pixel{display:block;width:var(--pixel-size);height:var(--pixel-size);min-width:0;min-height:0;background:var(--pixel-color);opacity:1;animation:theme-pixel-clear 460ms ease-out var(--pixel-delay) both;will-change:opacity}
+@keyframes theme-pixel-clear{from{opacity:1}to{opacity:0}}
+.theme-resolution-blur{animation:theme-resolution-focus 900ms cubic-bezier(.2,.7,.2,1) both;will-change:filter}
+@keyframes theme-resolution-focus{from{filter:blur(8px)}to{filter:blur(0)}}
+.student-header-actions{display:flex;align-items:center;gap:18px}
+:root[data-theme="dark"] .student-header-label{color:var(--theme-muted)}
+@media(max-width:620px){.theme-label{font-size:9px;padding:5px 6px}.theme-control{gap:6px}.student-header-actions{gap:9px}}
+@media(prefers-reduced-motion:reduce){:root{transition:none}.theme-toggle{transition:none}.theme-pixel-transition{display:none!important}.theme-resolution-blur{filter:none;animation:none;will-change:auto}}

@@ -1,6 +1,7 @@
 import dotenv from 'dotenv';
 import express from 'express';
 import app from './routes.js';
+import { initializeDatabase } from './database.js';
 
 dotenv.config();
 
@@ -16,7 +17,12 @@ app.use(express.json());
 // Configurar o EJS como motor de templates
 app.set('view engine', 'ejs');
 
-// Iniciar servidor
-app.listen(port, () => {
-    console.log(`Servidor rodando em http://localhost:${port}`);
+// Inicializar banco antes de aceitar requisições.
+initializeDatabase().then(() => {
+    app.listen(port, () => {
+        console.log(`Servidor rodando em http://localhost:${port}`);
+    });
+}).catch((error) => {
+    console.error('Não foi possível inicializar o banco de dados:', error);
+    process.exitCode = 1;
 });

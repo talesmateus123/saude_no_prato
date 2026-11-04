@@ -36,6 +36,8 @@ function renderPortal(data) {
         return `<article class="student-meal"><h3>${type.label}</h3><p>${escapeHtml(item.meal)}</p><small class="student-allergens">${item.allergens.length ? `Alérgenos: ${escapeHtml(item.allergens.join(', '))}` : 'Sem alérgenos informados'}</small></article>`;
     }).join('') : '<p class="student-empty">O cardápio de hoje ainda não foi publicado.</p>';
 
+    $('#student-notification-list').innerHTML = data.notifications?.length ? data.notifications.map((item) => `<article class="student-notification"><div><strong>${escapeHtml(item.title)}</strong><small>${escapeHtml(item.date)}</small></div><p>${escapeHtml(item.text)}</p></article>`).join('') : '<p class="student-empty">Não há avisos no momento.</p>';
+
     $('#student-meal-choices').innerHTML = availableMealTypes.map((type) => `<label class="student-meal-choice"><input type="checkbox" name="meals" value="${type.id}" ${data.selectedMeals.includes(type.id) ? 'checked' : ''}><span>${type.label}</span></label>`).join('') || '<p class="student-empty">Não há refeições disponíveis para selecionar.</p>';
     const isConfirmed = data.confirmed;
     $('#student-attendance-form').hidden = isConfirmed;
@@ -96,3 +98,6 @@ $('#student-logout').addEventListener('click', async () => {
 });
 
 request('/api/student/portal').then(renderPortal).catch(() => {});
+setInterval(() => {
+    if (document.visibilityState === 'visible' && portalData) request('/api/student/portal').then(renderPortal).catch(() => {});
+}, 30000);

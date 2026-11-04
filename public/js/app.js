@@ -2,19 +2,20 @@ const state = { dashboard: null, report: null };
 const $ = (selector) => document.querySelector(selector);
 const escapeHtml = (value) => String(value).replace(/[&<>'"]/g, (char) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[char]));
 const mealTypes = [{ id: 'cafe-da-manha', label: 'Café da manhã' }, { id: 'almoco', label: 'Almoço' }, { id: 'jantar', label: 'Jantar' }];
+const localDate = (date = new Date()) => `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
 
 function weekDates(startDate) {
     return Array.from({ length: 5 }, (_, index) => {
         const date = new Date(`${startDate}T12:00:00`);
         date.setDate(date.getDate() + index);
-        return date.toISOString().slice(0, 10);
+        return localDate(date);
     });
 }
 
 function getWeekStart(date = new Date()) {
     const monday = new Date(date.getFullYear(), date.getMonth(), date.getDate());
     monday.setDate(monday.getDate() - ((monday.getDay() + 6) % 7));
-    return `${monday.getFullYear()}-${String(monday.getMonth() + 1).padStart(2, '0')}-${String(monday.getDate()).padStart(2, '0')}`;
+    return localDate(monday);
 }
 
 function groupedMenu(menu) {
@@ -43,7 +44,7 @@ function renderMenu(menu) {
     const formatDay = (date) => new Date(`${date}T12:00:00`).toLocaleDateString('pt-BR', { weekday: 'short' }).replace('.', '').toUpperCase();
     const formatDate = (date) => new Date(`${date}T12:00:00`).getDate();
     const grouped = groupedMenu(menu);
-    const today = new Date().toISOString().slice(0, 10);
+    const today = localDate();
     const todayMenu = grouped[today] || {};
     $('#today-menu-list').innerHTML = mealTypes.map((type) => {
         const item = todayMenu[type.id];
@@ -69,6 +70,12 @@ function renderWeeklyEditor(grouped, dates) {
 
 function renderNotifications(items) {
     $('#notification-list').innerHTML = items.slice(0, 3).map((item) => `<div class="notification-item ${item.read ? 'read' : ''}"><strong>${escapeHtml(item.title)}</strong><p>${escapeHtml(item.text)}</p><small>${escapeHtml(item.date)}</small></div>`).join('');
+}
+
+function renderAttendance(items) {
+    const list = $('#attendance-list');
+    $('#attendance-total').textContent = `${items.length} hoje`;
+    list.innerHTML = items.length ? items.map((item) => `<div class="attendance-row"><div><strong>${escapeHtml(item.student?.name || 'Aluno')}</strong><small>${escapeHtml(item.student?.className || '')}</small></div><time>${escapeHtml(item.time || '')}</time><span>${item.meals.length ? escapeHtml(item.meals.map((id) => mealTypes.find((type) => type.id === id)?.label || id).join(', ')) : 'Sem refeições selecionadas'}</span></div>`).join('') : '<p class="attendance-empty">Nenhuma presença confirmada hoje.</p>';
 }
 
 function renderStudents(students) {
@@ -103,7 +110,12 @@ function setStudentFormOpen(isOpen) {
 
 async function loadDashboard() {
     state.dashboard = await request('/api/dashboard');
-    const { students, present, prepared, consumed, mealOptions, menu, notifications, studentsList } = state.dashboard;
+    const { date, students, present, prepared, consumed, mealOptions, menu, notifications, studentsList, attendance } = state.dashboard;
+    state.currentDate = date;
+    const current = new Date(`${date}T12:00:00`);
+    if ($('#week-start').value && localDate(new Date(`${$('#week-start').value}T12:00:00`)) !== getWeekStart(current)) {
+        $('#week-start').value = getWeekStart(current);
+    }
     $('#students-count').textContent = students;
     $('#present-count').textContent = present;
     $('#prepared-count').textContent = prepared;
@@ -114,7 +126,7 @@ async function loadDashboard() {
         const consumedInput = $(`#served-meals-form [name="${option.id}"]`);
         if (consumedInput) consumedInput.value = option.consumed || 0;
     });
-    renderMenu(menu); renderNotifications(notifications); renderStudents(studentsList);
+    renderMenu(menu); renderNotifications(notifications); renderStudents(studentsList); renderAttendance(attendance);
 }
 
 async function loadReports() {
@@ -138,6 +150,7 @@ function navigate(section) {
 
 document.querySelectorAll('[data-section]').forEach((link) => link.addEventListener('click', (event) => { event.preventDefault(); navigate(link.dataset.section); history.replaceState(null, '', `#${link.dataset.section}`); }));
 $('.menu-toggle').addEventListener('click', () => $('.sidebar').classList.toggle('open'));
+$('.dashboard-grid').insertAdjacentHTML('beforeend', '<section class="panel attendance-panel"><div class="panel-heading"><div><p class="eyebrow">PRESENÇA DE HOJE</p><h2>Alunos confirmados</h2></div><span id="attendance-total" class="count-badge">Atualizado</span></div><div id="attendance-list" class="attendance-list"></div></section>');
 const userMenuToggle = $('#user-menu-toggle');
 const userMenu = $('#user-menu');
 if (userMenuToggle && userMenu) {
@@ -172,7 +185,7 @@ $('#served-meals-form').addEventListener('submit', async (event) => {
         await loadDashboard();
     } catch (error) {
         feedback.textContent = error.message;
-        feedback.style.color = '#d56d5a';
+        feedback.style.color = 'var(--theme-accent-text)';
     }
 });
 $('#prepared-meals-form').addEventListener('submit', async (event) => {
@@ -187,7 +200,7 @@ $('#prepared-meals-form').addEventListener('submit', async (event) => {
         await loadDashboard();
     } catch (error) {
         feedback.textContent = error.message;
-        feedback.style.color = '#d56d5a';
+        feedback.style.color = 'var(--theme-accent-text)';
     }
 });
 $('#week-start').value = getWeekStart();
@@ -209,17 +222,26 @@ $('#weekly-menu-form').addEventListener('submit', async (event) => {
         feedback.textContent = result.changedDates.length ? 'Cardápio publicado. Os dias alterados geraram notificações.' : 'Cardápio salvo; não houve alterações para notificar.';
         feedback.style.color = '#579775';
         await loadDashboard();
-    } catch (error) { feedback.textContent = error.message; feedback.style.color = '#d56d5a'; }
+    } catch (error) { feedback.textContent = error.message; feedback.style.color = 'var(--theme-accent-text)'; }
 });
 $('#student-form').addEventListener('submit', async (event) => {
     event.preventDefault();
     const form = event.currentTarget;
     const payload = Object.fromEntries(new FormData(form).entries());
+    payload.gender = payload.gender === 'other' ? String(payload.genderDetail || '').trim() : payload.gender;
+    delete payload.genderDetail;
     payload.restrictions = String(payload.restrictions || '').split(',').map((item) => item.trim()).filter(Boolean);
     const feedback = $('#student-form-feedback');
-    try { const student = await request('/api/students', { method: 'POST', body: JSON.stringify(payload) }); feedback.textContent = `${student.name} foi cadastrado. Código de acesso: ${student.accessCode}`; feedback.style.color = '#579775'; form.reset(); await loadDashboard(); setStudentFormOpen(false); showToast('Novo aluno cadastrado.'); } catch (error) { feedback.textContent = error.message; feedback.style.color = '#d56d5a'; }
+    try { const student = await request('/api/students', { method: 'POST', body: JSON.stringify(payload) }); feedback.textContent = `${student.name} foi cadastrado. Código de acesso: ${student.accessCode}`; feedback.style.color = '#579775'; form.reset(); $('#student-gender-other-field').hidden = true; await loadDashboard(); setStudentFormOpen(false); showToast('Novo aluno cadastrado.'); } catch (error) { feedback.textContent = error.message; feedback.style.color = 'var(--theme-accent-text)'; }
 });
-$('#cancel-student-button').addEventListener('click', () => { $('#student-form').reset(); $('#student-form-feedback').textContent = ''; });
+$('#student-gender').addEventListener('change', (event) => {
+    const otherField = $('#student-gender-other-field');
+    const isOther = event.target.value === 'other';
+    otherField.hidden = !isOther;
+    $('#student-gender-detail').required = isOther;
+    if (!isOther) $('#student-gender-detail').value = '';
+});
+$('#cancel-student-button').addEventListener('click', () => { $('#student-form').reset(); $('#student-gender-other-field').hidden = true; $('#student-gender-detail').required = false; $('#student-form-feedback').textContent = ''; });
 $('#toggle-student-form').addEventListener('click', () => setStudentFormOpen($('#student-form').hidden));
 $('#remove-students-button').addEventListener('click', async () => {
     const ids = [...document.querySelectorAll('[data-student-select]:checked')].map((checkbox) => Number(checkbox.dataset.studentSelect));
@@ -232,3 +254,16 @@ $('#remove-students-button').addEventListener('click', async () => {
 $('#student-search').addEventListener('input', (event) => { const term = event.target.value.toLowerCase(); renderStudents(state.dashboard.studentsList.filter((student) => `${student.name} ${student.enrollment}`.toLowerCase().includes(term))); });
 $('#export-button').addEventListener('click', () => { const blob = new Blob([JSON.stringify(state.report, null, 2)], { type: 'application/json' }); const link = document.createElement('a'); link.href = URL.createObjectURL(blob); link.download = 'relatorio-prato-vivo.json'; link.click(); URL.revokeObjectURL(link.href); showToast('Relatório exportado.'); });
 loadDashboard().catch(() => showToast('Não foi possível carregar os dados.'));
+setInterval(async () => {
+    if (document.visibilityState !== 'visible') return;
+    try {
+        const dashboard = await request('/api/dashboard');
+        if (dashboard.date !== state.currentDate) {
+            await loadDashboard();
+            return;
+        }
+        $('#present-count').textContent = dashboard.present;
+        $('#attendance-total').textContent = `${dashboard.present} hoje`;
+        renderAttendance(dashboard.attendance);
+    } catch {}
+}, 15000);

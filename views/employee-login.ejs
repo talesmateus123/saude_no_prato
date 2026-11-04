@@ -4,18 +4,20 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="theme-color" content="#f7f4ee">
-    <title><%= titulo %> | Prato Vivo</title>
+    <script>try{document.documentElement.dataset.theme=localStorage.getItem('prato-vivo-theme')==='dark'?'dark':'light'}catch{}</script>
+    <title><%= titulo %> | Saúde no Prato</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Fraunces:opsz,wght@9..144,600;9..144,700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/css/main.css">
     <link rel="stylesheet" href="/css/student.css">
+    <link rel="stylesheet" href="/css/theme.css">
 </head>
 <body class="student-page">
     <main class="student-shell">
         <header class="student-header">
-            <a class="brand" href="/"><span class="brand-mark">✦</span><span>prato <strong>vivo</strong></span></a>
-            <span class="student-header-label">ÁREA DA EQUIPE</span>
+            <a class="brand" href="/"><span class="brand-mark">✦</span><span>saúde <strong>no prato</strong></span></a>
+            <div class="student-header-actions"><span class="student-header-label">ÁREA DA EQUIPE</span><div class="theme-control"><button class="theme-toggle" type="button" data-theme-toggle aria-label="Ativar modo escuro"><span class="theme-icon" aria-hidden="true">☾</span></button><span class="theme-label" data-theme-label>Modo escuro</span></div></div>
         </header>
         <section class="student-login">
             <p class="eyebrow">ACESSO RESTRITO</p>
@@ -29,5 +31,6 @@
         </section>
     </main>
     <script src="/js/employee-login.js"></script>
+    <script src="/js/theme.js"></script>
 </body>
 </html>

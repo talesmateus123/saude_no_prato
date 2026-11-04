@@ -3,5 +3,5 @@
 .user-menu-popover[hidden]{display:none}
 .user-menu-popover form{margin:0}
 .user-logout-button{display:flex;align-items:center;gap:10px;width:100%;padding:10px 12px;border:0;border-radius:4px;background:transparent;color:#59635b;text-align:left;font:500 12px 'DM Sans',sans-serif;cursor:pointer}
-.user-logout-button:hover{background:#fdf0e9;color:#df644f}
-.user-logout-button:focus-visible{outline:2px solid #df806b;outline-offset:1px}
+.user-logout-button:hover{background:#e7f9f9;color:var(--theme-accent-text,#164e8b)}
+.user-logout-button:focus-visible{outline:2px solid #21a9b5;outline-offset:1px}
